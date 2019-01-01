@@ -15,27 +15,14 @@ class File_Output(SampleBase):
     def get_palette(self):
         colors = []
         for i in range(255):
-            h = int(65 / 3) / 360  # (int(i / 3.5) / 360)
-            l = min(1.0, i / 255)  # ((min(50, i * 2)) / 255 )
+            h = (int(i / 3.5) / 360)
+            l = i / 255  # ((min(50, i * 2)) / 255 )
             s = 1.0
             color = colorsys.hls_to_rgb(h, l, s)
             color = (color[0] * 255, color[1] * 255, color[2] * 255)
             colors.append(color)
         print(len(colors))
         return colors
-
-    def get_colors(self, m):
-        cm = []
-        for y in range(len(m)):
-            cm.append([])
-            for x in range(len(m[y])):
-                h = int(65 / 3) / 360
-                l = m[y, x]
-                s = 1.0
-                color = colorsys.hls_to_rgb(h, l, s)
-                color = (color[0] * 255, color[1] * 255, color[2] * 255)
-                cm[y].append(color)
-        return np.array(cm)
 
     def get_fire(self, m):
         for x in range(len(m[len(m) - 1])):
@@ -50,8 +37,8 @@ class File_Output(SampleBase):
                 downleft = m[x - 1, y + 1] if x > 0 else 0
                 down = m[x, y + 1]
                 downright = m[x + 1, y + 1] if x < len(m[y]) - 1 else 0
-                m[x, y] = min(
-                    ((down2rows + downleft + down + downright) * base) // (base * multiplicator + summand), 254)
+                m[x, y] = min(((down2rows + downleft + down + downright) * base) // (base * multiplicator + summand),
+                              254)
         return m
 
     def run(self):
