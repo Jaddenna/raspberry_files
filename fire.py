@@ -64,10 +64,12 @@ class File_Output(SampleBase):
         rate = self.args.framerate
 
         while True:
+            fire = self.get_fire(fire)
+            fire_colors = np.array([[palette[fire[y][x]] for x in range(len(fire[y]))] for y in range(len(fire))])
             offscreen_canvas.Clear()
-            for r in range(len(fire)):
-                for c in range(len(fire[r])):
-                    color = fire[r][c]
+            for r in range(len(fire_colors)):
+                for c in range(len(fire_colors[r])):
+                    color = fire_colors[r][c]
                     if len(color) <= 3:
                         offscreen_canvas.SetPixel(c, r, color[0], color[2], color[1])  # rbg
                     elif color[3] > 0:
