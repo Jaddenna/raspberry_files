@@ -10,13 +10,12 @@ import colorsys
 class File_Output(SampleBase):
     def __init__(self, *args, **kwargs):
         super(File_Output, self).__init__(*args, **kwargs)
-        self.parser.add_argument("-fr", "--framerate", help="Set the Framerate", default=0.1, type=float)
 
     def get_palette(self):
         colors = []
         for i in range(255):
-            h = (int(i / 3.5) / 360)
-            l = i / 255  # ((min(50, i * 2)) / 255 )
+            h = (int(i / 3.5) / 360.0)
+            l = i / 255.0  # ((min(50, i * 2)) / 255 )
             s = 1.0
             color = colorsys.hls_to_rgb(h, l, s)
             color = (color[0] * 255, color[1] * 255, color[2] * 255)
@@ -47,8 +46,6 @@ class File_Output(SampleBase):
         palette = self.get_palette()
         fire = self.get_fire(np.array([[0 for _ in range(width // pxwidth)] for _ in range(height // pxwidth)]))
 
-        rate = self.args.framerate
-
         while True:
             fire = self.get_fire(fire)
             fire_colors = np.array([[palette[fire[y][x]] for x in range(len(fire[y]))] for y in range(len(fire))])
@@ -62,11 +59,11 @@ class File_Output(SampleBase):
                         offscreen_canvas.SetPixel(c, r, color[0], color[2], color[1])  # rbg
 
             offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
-            time.sleep(rate)
 
 
 if __name__ == '__main__':
     file_output = File_Output()
     if (not file_output.process()):
         file_output.print_help()
+
 
