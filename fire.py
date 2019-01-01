@@ -21,7 +21,6 @@ class File_Output(SampleBase):
             color = colorsys.hls_to_rgb(h, l, s)
             color = (color[0] * 255, color[1] * 255, color[2] * 255)
             colors.append(color)
-        print(len(colors))
         return colors
 
     def get_fire(self, m):
@@ -46,7 +45,7 @@ class File_Output(SampleBase):
         width, height = (self.matrix.width, self.matrix.height)
         pxwidth = 1
         palette = self.get_palette()
-        fire = self.get_fire(np.array([[0 for _ in range(width // pxwidth)] for _ in range(height // pxwidth)], dtype=float))
+        fire = self.get_fire(np.array([[0 for _ in range(width // pxwidth)] for _ in range(height // pxwidth)]))
 
         rate = self.args.framerate
 
