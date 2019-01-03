@@ -23,6 +23,13 @@ public:
 	unsigned int G;
 	unsigned int B;
 
+	RGB()
+	{
+		R = 0;
+		G = 0;
+		B = 0;
+	}
+
 	RGB(unsigned int r, unsigned int g, unsigned int b)
 	{
 		R = r;
@@ -105,11 +112,14 @@ static void InterruptHandler(int signo) {
 	interrupt_received = true;
 }
 
-int palette[256];
+const int w = 64;
+const int h = 64;
+RGB palette[256];
+int fire[h][w];  //this buffer will contain the fire
 
 static void GetPalette() {
-	RGB color = new RGB(0, 0, 0);
-	HSL hsl = new HSL(0, 0.0, 0.0);
+	RGB color = RGB(0, 0, 0);
+	HSL hsl = HSL(0, 0.0, 0.0);
 	//generate the palette
 	for (int x = 0; x < 256; x++)
 	{
@@ -117,7 +127,7 @@ static void GetPalette() {
 		//Hue goes from 0 to 85: red to yellow
 		//Saturation is always the maximum: 255
 		//Lightness is 0..255 for x=0..128, and 255 for x=128..255
-		hsl = new HSL(x / 3, 1.0, (std::min(255, x * 2)) / 255.0);
+		hsl = HSL(x / 3, 1.0, (std::min(255, x * 2)) / 255.0);
 		color = HSLToRGB(hsl);
 		//set the palette to the calculated RGB value
 		palette[x] = color;
@@ -129,23 +139,38 @@ static void DrawOnCanvas(Canvas *canvas) {
 	 * Let's create a simple animation. We use the canvas to draw
 	 * pixels. We wait between each step to have a slower animation.
 	 */
-	GetPalette();
-	RGB rgb = palette[0];
-	canvas->Fill(rgb.R, rgb.G, rgb.B);
+	RGB rgb = palette[85];
+	//canvas->Fill(rgb.R, rgb.G, rgb.B);
 
 	int center_x = canvas->width() / 2;
 	int center_y = canvas->height() / 2;
-	float radius_max = canvas->width() / 2;
-	float angle_step = 1.0 / 360;
-	for (float a = 0, r = 0; r < radius_max; a += angle_step, r += angle_step) {
-		if (interrupt_received)
-			return;
-		float dot_x = cos(a * 2 * M_PI) * r;
-		float dot_y = sin(a * 2 * M_PI) * r;
-		canvas->SetPixel(center_x + dot_x, center_y + dot_y,
-			255, 0, 0);
-		usleep(1 * 1000);  // wait a little to slow down things.
+
+	//randomize the bottom row of the fire buffer
+	for (int x = 0; x < w; x++) fire[h - 1][x] = abs(32768 + rand()) % 256;
+	//do the fire calculations for every pixel, from top to bottom
+	for (int y = 0; y < h - 1; y++)
+	{
+		for (int x = 0; x < w; x++)
+		{
+			fire[y][x] =
+				((fire[(y + 1) % h][(x - 1 + w) % w]
+					+ fire[(y + 1) % h][(x) % w]
+					+ fire[(y + 1) % h][(x + 1) % w]
+					+ fire[(y + 2) % h][(x) % w])
+					* 32) / 129;
+		}
 	}
+
+	//set the drawing buffer to the fire buffer, using the palette colors
+	for (int y = 0; y < h; y++)
+	{
+		for (int x = 0; x < w; x++)
+		{
+			RGB c = palette[fire[y][x]];
+			canvas->SetPixel(x, y, c.R, c.G, c.B);
+		}
+	}
+	usleep(20 * 1000);  // wait a little to slow down things.
 }
 
 int main(int argc, char *argv[]) {
@@ -166,8 +191,11 @@ int main(int argc, char *argv[]) {
 	signal(SIGTERM, InterruptHandler);
 	signal(SIGINT, InterruptHandler);
 
-	DrawOnCanvas(canvas);    // Using the canvas.
-
+	GetPalette();
+	while (!interrupt_received)
+	{
+		DrawOnCanvas(canvas);    // Using the canvas.
+	}
 	// Animation finished. Shut down the RGB matrix.
 	canvas->Clear();
 	delete canvas;
