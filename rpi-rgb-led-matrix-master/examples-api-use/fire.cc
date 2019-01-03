@@ -108,8 +108,8 @@ static void InterruptHandler(int signo) {
 int palette[256];
 
 static void GetPalette() {
-	RGB color;
-	HSL hsl;
+	RGB color = new RGB(0, 0, 0);
+	HSL hsl = new HSL(0, 0.0, 0.0);
 	//generate the palette
 	for (int x = 0; x < 256; x++)
 	{
